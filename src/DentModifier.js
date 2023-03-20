@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import throttle from 'lodash.throttle';
 
 export default class DentModifier {
     constructor() {
@@ -14,6 +15,8 @@ export default class DentModifier {
         this.sphere = new THREE.Sphere();
         this.ray = new THREE.Ray();
         this.tmpVec = new THREE.Vector3();
+
+        this.computeNormalsThrottled = throttle((geometry) => geometry.computeVertexNormals(), 150, { trailing: true, leading: true});
     }
 
     set(origin, direction, radius, depth) {
@@ -49,12 +52,12 @@ export default class DentModifier {
             }
         }
 
-        if (!modified) return;
+        if (modified) {
+            //console.log('modified');
+            geometry.attributes.position.needsUpdate = true;
+            this.computeNormalsThrottled(geometry);            
+        }
 
-        //console.log('modified');
-        geometry.attributes.position.needsUpdate = true;
-        geometry.computeVertexNormals();
-
-        return this;
+        return modified;
     }
 };
